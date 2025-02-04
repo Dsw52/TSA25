@@ -1,0 +1,222 @@
+---
+title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2025"
+author: "Daniel Whitehead"
+subtitle: "Assignment 2 - Due date 01/23/25"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+geometry: margin=2.54cm
+---
+
+## Submission Instructions
+
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github.   
+
+Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A02_Sp24.Rmd"). Then change "Student Name" on line 4 with your name. 
+
+Then you will start working through the assignment by  **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai. 
+
+## R packages
+
+R packages needed for this assignment:"forecast","tseries", and "dplyr". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
+
+```{r}
+#Load/install required package here
+library(forecast)
+library(tseries)
+library(dplyr)
+library(ggplot2)
+```
+
+
+## Data set information  
+
+Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our 
+**Data** folder. The data comes from the US Energy Information and 
+Administration and corresponds to the December 2023 Monthly Energy Review. 
+The spreadsheet is ready to be used. You will also find a $.csv$ version of the 
+data "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv". 
+You may use the function $read.table()$ to import the $.csv$ data in R. Or refer
+to the file "M2_ImportingData_CSV_XLSX.Rmd" in our Lessons folder for functions 
+that are better suited for importing the $.xlsx$.
+
+```{r}
+#Importing data set
+library(readxl)
+Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source <- read_excel(
+  "~/ENV797/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx", 
+  skip = 9)
+Energy_df <- 
+  Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source[-1, ]
+
+print(Energy_df)
+```
+
+
+## Question 1
+You will work only with the following columns: Total Biomass Energy Production, 
+Total Renewable Energy Production, Hydroelectric Power Consumption. Create a 
+data frame structure with these three time series only. Use the command head() 
+to verify your data.
+
+```{r Question 1}
+
+selected_energy <- Energy_df %>%
+  select(4,5,6)
+#realized my data was in character form :(
+selected_energy <- as.data.frame(lapply(selected_energy, as.numeric))
+
+head(selected_energy)
+```
+
+
+## Question 2
+Transform your data frame in a time series object and specify the starting 
+point and frequency of the time series using the function ts().
+
+```{r Question 2}
+energy_ts <- ts(selected_energy, start = c(1973, 1), frequency = 12)
+
+head(energy_ts)
+```
+
+
+## Question 3
+Compute mean and standard deviation for these three series.
+
+```{r Mean and Standard Deviation}
+#Biomass
+mean_biomass <- round(mean(energy_ts[, 1]), 2)
+sd_biomass <- round(sd(energy_ts[, 1]), 2)
+
+# Renewable 
+mean_renewable <- round(mean(energy_ts[, 2]), 2)
+sd_renewable <- round(sd(energy_ts[, 2]), 2)
+
+# Hydroelectric 
+mean_hydroelectric <- round(mean(energy_ts[, 3]), 2)
+sd_hydroelectric <- round(sd(energy_ts[, 3]), 2)
+
+print(paste("Biomass Mean and Standard Deviation:"))
+print(paste("Mean:", mean_biomass, "trillion BTU. Standard Deviation:", 
+            sd_biomass, "trillion BTU."))
+
+print(paste("Renewable Mean and Standard Deviation:"))
+print(paste("Mean:", mean_renewable, "trillion BTU. Standard Deviation:", 
+            sd_renewable, "trillion BTU."))
+
+print(paste("Hydroelectric Mean and Standard Deviation:"))
+print(paste("Mean:", mean_hydroelectric, "trillion BTU. Standard Deviation:", 
+            sd_hydroelectric, "trillion BTU."))
+
+```
+
+
+## Question 4
+Display and interpret the time series plot for each of these variables. Try to 
+make your plot as informative as possible by writing titles, labels, etc. For 
+each plot add a horizontal line at the mean of each series in a different color.
+
+
+```{r Combined Plot}
+
+autoplot(energy_ts) +
+  labs(
+    x = "Year",  
+    y = "Energy Production/Consumption (Trillion BTU)", 
+    title = "Energy Production/Consumption Over Time", 
+    caption = "Figure 1: Time series of energy production and consumption, 
+    with dashed lines indicating the mean values for Total 
+    Biomass Energy Production (red), Total Renewable Energy 
+    Production (green), and Hydroelectric Power Consumption (blue)."  
+  ) +
+  geom_hline(yintercept = mean_biomass, color = "red", linetype = "dashed", 
+             size = 1.2) +
+  geom_hline(yintercept = mean_renewable, color = "green", linetype = "dashed", 
+             size = 1.2) +
+  geom_hline(yintercept = mean_hydroelectric, color = "blue", 
+             linetype = "dashed", size = 1.2) +
+  theme(plot.caption = element_text(hjust = 0.5, size = 10, 
+                                    face = "italic")) 
+
+```
+For total renewable energy production, production is at about 200 trillion BTU 
+in 1973. It increases for about 15 years, stagnates for about 20, then hits a 
+(somewhat steep) steady increase that continues to grow into the 2020's. Biomass 
+has a very similar trend, though it starts closer to 125 trillion BTU in 1973 
+and stagnates a second time starting in about 2015. Hydroelectric consumption 
+remains steady abound 80 trillion BTU throughout the entirety of the time series 
+plot.
+
+
+
+## Question 5
+Compute the correlation between these three series. Are they significantly
+correlated? Explain your answer.
+
+```{r Correlation}
+
+correlation_matrix <- cor(energy_ts, use = "complete.obs")
+
+print("Correlation Matrix:")
+print(correlation_matrix)
+
+```
+Total Biomass Energy Production and Total Renewable Energy Production seem to be
+highly correlated as there is a 0.97 correlation between them. However, these 
+series do not seem to have much correlation with Hydroelectric Power 
+Consumption, as the correlation values are very low and insignificant.
+
+
+
+## Question 6
+Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
+
+```{r}
+
+acf_biomass <- Acf(energy_ts[,1], lag.max = 40, 
+                   main = "ACF of Total Biomass Energy Production", 
+                   type = "correlation", plot = TRUE)
+acf_renewable <- Acf(energy_ts[,2], lag.max = 40, 
+                     main = "ACF of Total Renewable Energy Production",
+                     type = "correlation", plot = TRUE)
+acf_hydro <- Acf(energy_ts[,3], lag.max = 40, 
+                 main = "ACF of Hydroelectric Power Consumption", 
+                 type = "correlation", plot = TRUE)
+```
+Total Biomass Energy Production and Total Renewable Energy Production have 
+similar ACF plots in terms of behavior. Both start with high values and then 
+slowly decline. Hydroelectric Power Consumption is different in terms of 
+behavior, as it rises and falls, crossing in and out of negative. values. This
+means that for Biomass and Renewables, there is more predictability in 
+forecasting the future or longer-term data. Hydro seems to be more affected by 
+factors that cause short term fluctuations.
+
+
+
+
+## Question 7
+Compute the partial autocorrelation function from lag 1 to lag 40 for these 
+three variables. How these plots differ from the ones in Q6?
+
+```{r Partial ACF version}
+pacf_biomass <- Pacf(energy_ts[,1], lag.max = 40, 
+                     main = "PACF of Total Biomass Energy Production", 
+                     plot=TRUE)
+pacf_renewable <- Pacf(energy_ts[,2], lag.max = 40, 
+                       main = "PACF of Total Renewable Energy Production", 
+                       plot=TRUE)
+pacf_hydro <- Pacf(energy_ts[,3], lag.max = 40, 
+                   main = "PACF of Hydroelectric Power Consumption", plot=TRUE)
+```
+These plots differ because they have much shorter bars. This makes sense because
+in general the PACF plots have shorter bars, as they do not account for the 
+complete correlation of the lags and instead do not account for shorter lags as 
+the lags get higher in values. Additionally, the hydropower plot is much more 
+similar to the biomass and renewable plots.
+
+
