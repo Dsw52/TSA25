@@ -1,6 +1,6 @@
 ---
 title: "Import Data - ACF - PACF"
-author: "Luana Lima"
+author: "Daniel Whitehead"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -88,7 +88,10 @@ A plot of observed values over time is the first thing you do to start understan
 
 ```{r}
 #using package ggplot2
-ggplot()
+ggplot(inflow_data, aes(x= my_date))+
+  geom_line(aes(y = HP1))+
+  geom_line(aes(y = HP3))+
+  theme_bw()
 
 #adding two time series to the same plot
 
@@ -102,7 +105,7 @@ In this course we will also use *autoplot()* which is a ggplot() for time series
 Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. Only the columns with reservoir inflow data should be transformed, not the ones with month and year. Your ts object is not a data frame, but like I said we will need it as a ts for some function we will explore in future scripts.
 
 ```{r}
-ts_inflow_data <- #####
+ts_inflow_data <- ts(inflow_data$HP1, start = c(1931, 1), frequency = 12)
 ts_inflow_data
 
 ```
@@ -127,9 +130,9 @@ There are multiple ways to get acf and pacf plots in R. The default package "sta
 
 ```{r acf}
 # Option 1: The function acf() and pacf() is from package "stats"
-HP1_acf=
+HP1_acf=acf(ts_inflow_data[,1],lag=60)
 
-HP1_pacf=
+HP1_pacf=Pacf(ts_inflow_data[,1],lag=60)
 
 #Option 2: Computing ACF and PACF with package "forecast"
 
@@ -137,6 +140,8 @@ HP1_pacf=
 HP1_acf=
 
 HP1_pacf=
+  
+
   
 ```
 

@@ -137,11 +137,23 @@ Let's identify and remove trend component. You start by fitting a linear model t
 
 ```{r}
 #Create vector t
+IHP <- 1
+t <- c(1:nobs)
 
+                   
+#Fit a linear trend to TS, lm function needs a data frame object
+linear_trend_model=lm(inflow_data[, IHP + 1] ~t)
+summary(linear_trend_model)
 
-
+beta0<- as.numeric(linear_trend_model$coefficients[1])
+beta1<- as.numeric(linear_trend_model$coefficients[2])
 #Fit a linear trend to TS of iHP
+linear_trend <- beta0 + beta1 * t
+detrend_inflow <- inflow_data[, IHP + 1] - linear_trend
+ts_detrend <- ts(detrend_inflow, start = c(1931,1), frequency = 12)
 
+autoplot(ts_inflow_data[, IHP], color = "darkblue")
+autoplot(ts_detrend, series = "Detrended")
 
 ```
 
