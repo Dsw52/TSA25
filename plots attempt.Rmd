@@ -1,0 +1,157 @@
+---
+title: "plots attempt"
+author: "Daniel"
+date: "2025-02-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+#Load/install required package here
+library(tseries)
+library(Kendall)
+library(forecast)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+```
+
+```{r load data}
+library(readxl)
+```
+
+
+##Trend Component
+
+### Q1
+For each time series, i.e., Renewable Energy Production and Hydroelectric Consumption create three plots: one with time series, one with the ACF and with the PACF. You may use the some code form A2, but I want all the three plots side by side as in a grid.
+(Hint: use function `plot_grid()` from the `cowplot` package)
+
+```{r}
+# Load the data
+Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source <- read_excel(
+  "~/ENV797/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  skip = 9)
+
+
+Energy_df <-
+  Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source[-1, ]
+ts_plots <- list()
+acf_plots <- list()
+pacf_plots <- list()
+# Select the relevant columns and convert to numeric
+selected_energy <- Energy_df %>%
+  select(4,5,6)
+
+selected_energy <- as.data.frame(lapply(selected_energy, as.numeric))
+
+# Create the time series object
+energy_ts <- ts(selected_energy[,2:3], start = c(1973, 1), frequency = 12)
+
+# Time series plots
+ts_renewable <- autoplot(energy_ts[,1], main = "Time Series of Total Renewable Energy Production")
+ts_hydro <- autoplot(energy_ts[,2], main = "Time Series of Hydroelectric Power Consumption")
+
+# ACF plots
+acf_renewable <- Acf(energy_ts[,1], lag.max = 40, main = "ACF of Total Renewable Energy Production", plot = TRUE)
+acf_hydro <- Acf(energy_ts[,2], lag.max = 40, main = "ACF of Hydroelectric Power Consumption", plot = FALSE)
+
+# Loop over both columns (1 and 2)
+for (i in 1:2) {
+  
+  # Create Time Series plots
+  ts_plots[[i]] <- autoplot(energy_ts[, i]) +
+    ggtitle(colnames(energy_ts)[i]) +
+    xlab('Year') + 
+    ylab('Energy, trillion BTU')
+  
+  # Create ACF plots for each time series
+  acf_plots[[i]] <- autoplot(Acf(energy_ts[,i], lag.max = 40, plot = FALSE)) +
+    ggtitle(paste("ACF of", colnames(energy_ts)[i]))
+  
+  # Create PACF plots for each time series
+  pacf_plots[[i]] <- autoplot(Pacf(energy_ts[,i], lag.max = 40, plot = FALSE)) +
+    ggtitle(paste("PACF of", colnames(energy_ts)[i]))
+}
+
+
+plot_grid(
+  plot_grid(ts_plots[[1]], ts_plots[[2]], ncol = 2),  
+  plot_grid(acf_plots[[1]], acf_plots[[2]], ncol = 2),  
+  plot_grid(pacf_plots[[1]], pacf_plots[[2]], ncol = 2),  
+  ncol = 1  
+)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+#When I was struggling with the above portion, my friend helped me with 
+# Load the data
+Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source <- read_excel(
+  "~/ENV797/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  skip = 9)
+
+
+Energy_df <-
+  Table_10_1_Renewable_Energy_Production_and_Consumption_by_Source[-1, ]
+ts_plots <- list()
+acf_plots <- list()
+pacf_plots <- list()
+# Select the relevant columns and convert to numeric
+selected_energy <- Energy_df %>%
+  select(4,5,6)
+
+selected_energy <- as.data.frame(lapply(selected_energy, as.numeric))
+
+# Create the time series object
+energy_ts <- ts(selected_energy[,2:3], start = c(1973, 1), frequency = 12)
+
+# Time series plots
+ts_renewable <- autoplot(energy_ts[,1], main = "Time Series of Total Renewable Energy Production")
+ts_hydro <- autoplot(energy_ts[,2], main = "Time Series of Hydroelectric Power Consumption")
+
+# ACF plots
+acf_renewable <- Acf(energy_ts[,1], lag.max = 40, main = "ACF of Total Renewable Energy Production", plot = TRUE)
+acf_hydro <- Acf(energy_ts[,2], lag.max = 40, main = "ACF of Hydroelectric Power Consumption", plot = FALSE)
+
+# Loop over both columns (1 and 2)
+for (i in 1:2) {
+  
+  # Create Time Series plots
+  ts_plots[[i]] <- autoplot(energy_ts[, i]) +
+    ggtitle(colnames(energy_ts)[i]) +
+    xlab('Year') + 
+    ylab('Energy, trillion BTU')
+  
+  # Create ACF plots for each time series
+  acf_plots[[i]] <- autoplot(Acf(energy_ts[,i], lag.max = 40, plot = FALSE)) +
+    ggtitle(paste("ACF of", colnames(energy_ts)[i]))
+  
+  # Create PACF plots for each time series
+  pacf_plots[[i]] <- autoplot(Pacf(energy_ts[,i], lag.max = 40, plot = FALSE)) +
+    ggtitle(paste("PACF of", colnames(energy_ts)[i]))
+}
+
+
+plot_grid(
+  plot_grid(ts_plots[[1]], ts_plots[[2]], ncol = 2),  
+  plot_grid(acf_plots[[1]], acf_plots[[2]], ncol = 2),  
+  plot_grid(pacf_plots[[1]], pacf_plots[[2]], ncol = 2),  
+  ncol = 1  
+)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
