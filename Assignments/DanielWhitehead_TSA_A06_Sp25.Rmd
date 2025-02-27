@@ -1,0 +1,196 @@
+---
+title: "ENV 797 - Time Series Analysis for Energy and Environment Applications | Spring 2025"
+subtitle: "Assignment 6 - Due date 02/27/25"
+author: "Daniel Whitehead"
+output: pdf_document
+geometry: margin=2.54cm
+---
+
+## Directions
+R packages needed for this assignment: "ggplot2", "forecast", "tseries" and "sarima". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.
+
+## Setting initial options
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+```{r Packages}
+#Load/install required package here
+
+library(ggplot2)
+library(forecast)  
+library(tseries)
+library(tidyverse)
+library(sarima)
+
+```
+## Q1
+
+Describe the important characteristics of the sample autocorrelation function (ACF) plot and the partial sample autocorrelation function (PACF) plot for the following models:
+
+* AR(2)
+
+> Answer: ◦
+ACF: Because this is an AR model, and the ar order is 2, he ACF plot will show an exponential decay over time. 
+◦
+PACF: The PACF plot will cut off at the lag 2 because the order of the AR is 2. For an AR(2) model, the PACF will have large spikes at lags 1 and 2 and then cut off to regular values for higher lags. The PACF identifies the order of the model.
+
+* MA(1)
+
+> Answer:◦
+ACF: Because this is an MA model, we can look at where the lag cut off is in the acf plot. The ACF plot for MA(1) will cut off after lag 1. In an MA model the ACF identifies the order of the MA model.
+◦
+PACF: The PACF plot for an MA model will show an exponential decay over time. 
+
+## Q2
+
+Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q)$ where $p$ is the order of the autoregressive component, $d$ is the number of times the series need to be differenced to obtain stationarity and $q$ is the order of the moving average component. If we don't need to difference the series, we don't need to specify the "I" part and we can use the short version, i.e., the ARMA$(p,q)$.
+
+(a) Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient. Use the `arima.sim()` function in R to generate $n=100$ observations from each of these three models. Then, using `autoplot()` plot the generated series in three separate graphs.
+
+```{r 2A}
+arma10 <- arima.sim(n = 100, list(order = c(1, 0, 0), ar = 0.6))
+
+# Generate ARMA(0,1) series (MA(1) model)
+arma01 <- arima.sim(n = 100, list(order = c(0, 0, 1), ma = 0.9))
+
+# Generate ARMA(1,1) series (ARMA(1,1) model)
+arma11 <- arima.sim(n = 100, list(order = c(1, 0, 1), ar = 0.6, ma = 0.9))
+
+# Create the plots using autoplot from the forecast package
+autoplot(arma10) + ggtitle("ARMA(1, 0) - AR(1) Model") + xlab("Time") + ylab("Value")
+autoplot(arma01) + ggtitle("ARMA(0, 1) - MA(1) Model") + xlab("Time") + ylab("Value")
+autoplot(arma11) + ggtitle("ARMA(1, 1) Model") + xlab("Time") + ylab("Value")
+```
+
+
+(b) Plot the sample ACF for each of these models in one window to facilitate comparison (Hint: use `cowplot::plot_grid()`).
+
+
+```{r}
+# Generate ACF plots for each model
+acf_10 <- Acf(arma10, plot = FALSE, lag.max = 40)
+acf_01 <- Acf(arma01, plot = FALSE, lag.max = 40)
+acf_11 <- Acf(arma11, plot = FALSE, lag.max = 40)
+
+# Convert ACF data to ggplot objects using autoplot
+plot_acf_10 <- autoplot(acf_10, main = "ACF of ARMA(1,0)")
+plot_acf_01 <- autoplot(acf_01, main = "ACF of ARMA(0,1)")
+plot_acf_11 <- autoplot(acf_11, main = "ACF of ARMA(1,1)")
+
+# Combine the plots using cowplot::plot_grid
+plot_grid(plot_acf_10, plot_acf_01, plot_acf_11, nrow = 1)
+```
+
+(c) Plot the sample PACF for each of these models in one window to facilitate comparison.
+
+```{r}
+# Generate PACF plots for each model
+pacf_10 <- Pacf(arma10, plot = FALSE, lag.max = 40)
+pacf_01 <- Pacf(arma01, plot = FALSE, lag.max = 40)
+pacf_11 <- Pacf(arma11, plot = FALSE, lag.max = 40)
+
+# Convert PACF data to ggplot objects using autoplot
+plot_pacf_10 <- autoplot(pacf_10, main = "PACF of ARMA(1,0)")
+plot_pacf_01 <- autoplot(pacf_01, main = "PACF of ARMA(0,1)")
+plot_pacf_11 <- autoplot(pacf_11, main = "PACF of ARMA(1,1)")
+
+# Combine the plots using cowplot::plot_grid
+plot_grid(plot_pacf_10, plot_pacf_01, plot_pacf_11, nrow = 1)
+
+```
+
+(d) Look at the ACFs and PACFs. Imagine you had these plots for a data set and you were asked to identify the model, i.e., is it AR, MA or ARMA and the order of each component. Would you be able identify them correctly? Explain your answer.
+
+> Answer:
+
+(e) Compare the PACF values R computed with the values you provided for the lag 1 correlation coefficient, i.e., does $\phi=0.6$ match what you see on PACF for ARMA(1,0), and ARMA(1,1)? Should they match?
+
+> Answer:
+
+(f) Increase number of observations to $n=1000$ and repeat parts (b)-(e).
+
+```{r}
+# Simulate ARMA(1,0) with phi = 0.6
+arma_10_1000 <- arima.sim(n = 1000, list(order = c(1, 0, 0), ar = 0.6))
+
+# Simulate ARMA(0,1) with theta = 0.9
+arma_01_1000 <- arima.sim(n = 1000, list(order = c(0, 0, 1), ma = 0.9))
+
+# Simulate ARMA(1,1) with phi = 0.6 and theta = 0.9
+arma_11_1000 <- arima.sim(n = 1000, list(order = c(1, 0, 1), ar = 0.6, ma = 0.9))
+
+# Generate ACF plots for each model
+acf_10_1000 <- Acf(arma_10_1000, plot = FALSE, lag.max = 40)
+acf_01_1000 <- Acf(arma_01_1000, plot = FALSE, lag.max = 40)
+acf_11_1000 <- Acf(arma_11_1000, plot = FALSE, lag.max = 40)
+
+# Convert ACF data to ggplot objects using autoplot
+plot_acf_10_1000 <- autoplot(acf_10_1000, main = "ACF of ARMA(1,0)")
+plot_acf_01_1000 <- autoplot(acf_01_1000, main = "ACF of ARMA(0,1)")
+plot_acf_11_1000 <- autoplot(acf_11_1000, main = "ACF of ARMA(1,1)")
+
+# Combine the plots using cowplot::plot_grid
+plot_grid(plot_acf_10_1000, plot_acf_01_1000, plot_acf_11_1000, nrow = 1)
+
+# Generate PACF plots for each model
+pacf_10_1000 <- Pacf(arma_10_1000, plot = FALSE, lag.max = 40)
+pacf_01_1000 <- Pacf(arma_01_1000, plot = FALSE, lag.max = 40)
+pacf_11_1000 <- Pacf(arma_11_1000, plot = FALSE, lag.max = 40)
+
+# Convert PACF data to ggplot objects using autoplot
+plot_pacf_10_1000 <- autoplot(pacf_10_1000, main = "PACF of ARMA(1,0)")
+plot_pacf_01_1000 <- autoplot(pacf_01_1000, main = "PACF of ARMA(0,1)")
+plot_pacf_11_1000 <- autoplot(pacf_11_1000, main = "PACF of ARMA(1,1)")
+
+# Combine the plots using cowplot::plot_grid
+plot_grid(plot_pacf_10_1000, plot_pacf_01_1000, plot_pacf_11_1000, nrow = 1)
+
+```
+
+## Q3
+
+Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
+
+(a) Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
+> p = 1, d = 0, q = 1
+> P = 1, D = 0, Q = 0
+> s would be 12 
+
+
+(b) Also from the equation what are the values of the parameters, i.e., model coefficients.
+> AR phi would be 0.7, MA theta would be -0.1, and the sar phi would be -0.25.
+
+## Q4
+
+Simulate a seasonal ARIMA$(0, 1)\times(1, 0)_{12}$ model with $\phi =0 .8$ and $\theta = 0.5$ using the `sim_sarima()` function from package `sarima`. The $12$ after the bracket tells you that $s=12$, i.e., the seasonal lag is 12, suggesting monthly data whose behavior is repeated every 12 months. You can generate as many observations as you like. Note the Integrated part was omitted. It means the series do not need differencing, therefore $d=D=0$. Plot the generated
+series using `autoplot()`. Does it look seasonal?
+
+```{r}
+# Simulate the seasonal ARIMA(0,1)(1,0)[12] model with specified parameters
+n <- 100  # Number of observations to generate
+phi <- 0.8  # Seasonal AR coefficient
+theta <- 0.5  # MA coefficient
+
+# Simulate the series using sim_sarima
+simulated_series <- sim_sarima(n = n, 
+                               order = c(0, 1, 0),          # ARMA(0,1,0) 
+                               seasonal = c(1, 0, 0),       # AR(1) seasonal part
+                               s = 12,                      # Seasonal period (12 
+                               phi = phi,                   # AR coefficient
+                               theta = theta)               # MA coefficient
+
+# Plot the generated series using autoplot
+autoplot(simulated_series) + 
+  ggtitle("Simulated Seasonal ARIMA(0,1)(1,0)[12] Model") + 
+  xlab("Time") + 
+  ylab("Value")
+```
+
+## Q5
+
+Plot ACF and PACF of the simulated series in Q4. Comment if the plots are well representing the model you simulated, i.e., would you be able to identify the order of both non-seasonal and seasonal components from the plots? Explain.
+
+```{r}
+
+```
