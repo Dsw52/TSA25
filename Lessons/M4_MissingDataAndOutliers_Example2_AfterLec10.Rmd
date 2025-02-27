@@ -2,6 +2,8 @@
 title: "M4: Outliers and Missing Data - Wind Speed Data"
 author: "Luana Lima"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -39,7 +41,7 @@ Today we will work with wind speed data.
 ```{r}
 
 #Importing time series data from text file#
-wind_data <- read.csv(file="~/ENV797/Data/Wind_Speed_PortArthurTX_Processed.csv",header=TRUE,stringsAsFactors = TRUE)
+wind_data <- read.csv(file="./Data/Wind_Speed_PortArthurTX_Processed.csv",header=TRUE,stringsAsFactors = TRUE)
 
 #creating data object
 wind_data$DATE <- ym(wind_data$DATE)
@@ -52,10 +54,12 @@ wind_data$DATE <- ym(wind_data$DATE)
 Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. 
 
 ```{r}
-ts_wind_data <- ts(wind_data$AWND.1,frequency=12) 
+ts_wind_data <- ts(wind_data$AWND.1,frequency=12,start=c(1984,1)) 
 
 autoplot(ts_wind_data) +
   ylab("Average Wind Speed") 
+
+summary(wind_data$AWND.1)
 ```
 
 
@@ -82,6 +86,23 @@ If you want to handle missing data, but do not want to remove outliers, here are
 `zoo::na.approx()`
 
 
+```{r}
+clean_wind_data_fun2 <- forecast::na.interp(ts_wind_data)  #object should be a time series
 
+autoplot(clean_wind_data_fun2, series="Wind Clean") +
+  autolayer(ts_wind_data, series="Wind Raw") +
+  ylab("Average Wind Speed") 
+
+```
+
+
+```{r}
+clean_wind_data_fun3 <- zoo::na.approx(ts_wind_data)  #object should be a time series
+
+autoplot(clean_wind_data_fun3, series="Wind Clean") +
+  autolayer(ts_wind_data, series="Wind Raw") +
+  ylab("Average Wind Speed") 
+
+```
 
 
