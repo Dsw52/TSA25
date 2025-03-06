@@ -1,8 +1,12 @@
 ---
-title: "ENV 797 - Time Series Analysis for Energy and Environment Applications | Spring 2025"
-subtitle: "Assignment 6 - Due date 02/27/25"
+title: "ENV 797 - Time Series Analysis for Energy and Environment Applications | Spring
+  2025"
 author: "Daniel Whitehead"
-output: pdf_document
+subtitle: "Assignment 6 - Due date 02/27/25"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 geometry: margin=2.54cm
 ---
 
@@ -31,7 +35,7 @@ Describe the important characteristics of the sample autocorrelation function (A
 * AR(2)
 
 > Answer: ◦
-ACF: Because this is an AR model, and the ar order is 2, he ACF plot will show an exponential decay over time. 
+ACF: Because this is an AR model, and the ar order is 2, the ACF plot will show an exponential decay over time. 
 ◦
 PACF: The PACF plot will cut off at the lag 2 because the order of the AR is 2. For an AR(2) model, the PACF will have large spikes at lags 1 and 2 and then cut off to regular values for higher lags. The PACF identifies the order of the model.
 
@@ -49,12 +53,13 @@ Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q
 (a) Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient. Use the `arima.sim()` function in R to generate $n=100$ observations from each of these three models. Then, using `autoplot()` plot the generated series in three separate graphs.
 
 ```{r 2A}
+# ARMA(1,0) series (AR(1) model)
 arma10 <- arima.sim(n = 100, list(order = c(1, 0, 0), ar = 0.6))
 
-# Generate ARMA(0,1) series (MA(1) model)
+# ARMA(0,1) series (MA(1) model)
 arma01 <- arima.sim(n = 100, list(order = c(0, 0, 1), ma = 0.9))
 
-# Generate ARMA(1,1) series (ARMA(1,1) model)
+# ARMA(1,1) series (ARMA(1,1) model)
 arma11 <- arima.sim(n = 100, list(order = c(1, 0, 1), ar = 0.6, ma = 0.9))
 
 # Create the plots using autoplot from the forecast package
@@ -67,86 +72,93 @@ autoplot(arma11) + ggtitle("ARMA(1, 1) Model") + xlab("Time") + ylab("Value")
 (b) Plot the sample ACF for each of these models in one window to facilitate comparison (Hint: use `cowplot::plot_grid()`).
 
 
-```{r}
-# Generate ACF plots for each model
+```{r 2B}
+# ACFs
 acf_10 <- Acf(arma10, plot = FALSE, lag.max = 40)
 acf_01 <- Acf(arma01, plot = FALSE, lag.max = 40)
 acf_11 <- Acf(arma11, plot = FALSE, lag.max = 40)
 
-# Convert ACF data to ggplot objects using autoplot
+# plot acf
 plot_acf_10 <- autoplot(acf_10, main = "ACF of ARMA(1,0)")
 plot_acf_01 <- autoplot(acf_01, main = "ACF of ARMA(0,1)")
 plot_acf_11 <- autoplot(acf_11, main = "ACF of ARMA(1,1)")
 
-# Combine the plots using cowplot::plot_grid
-plot_grid(plot_acf_10, plot_acf_01, plot_acf_11, nrow = 1)
+# cowplot acf
+cowplot::plot_grid(plot_acf_10, plot_acf_01, plot_acf_11, nrow = 1)
+
 ```
 
 (c) Plot the sample PACF for each of these models in one window to facilitate comparison.
 
-```{r}
-# Generate PACF plots for each model
+```{r 2C}
+# pacfs
 pacf_10 <- Pacf(arma10, plot = FALSE, lag.max = 40)
 pacf_01 <- Pacf(arma01, plot = FALSE, lag.max = 40)
 pacf_11 <- Pacf(arma11, plot = FALSE, lag.max = 40)
 
-# Convert PACF data to ggplot objects using autoplot
+# pacf plots
 plot_pacf_10 <- autoplot(pacf_10, main = "PACF of ARMA(1,0)")
 plot_pacf_01 <- autoplot(pacf_01, main = "PACF of ARMA(0,1)")
 plot_pacf_11 <- autoplot(pacf_11, main = "PACF of ARMA(1,1)")
 
-# Combine the plots using cowplot::plot_grid
-plot_grid(plot_pacf_10, plot_pacf_01, plot_pacf_11, nrow = 1)
+# plot pacfs
+cowplot::plot_grid(plot_pacf_10, plot_pacf_01, plot_pacf_11, nrow = 1)
 
 ```
 
 (d) Look at the ACFs and PACFs. Imagine you had these plots for a data set and you were asked to identify the model, i.e., is it AR, MA or ARMA and the order of each component. Would you be able identify them correctly? Explain your answer.
 
-> Answer:
+> Answer:I would be able to determine the ARMA 1,0 from the pacf plot because there is a spike at lag 1 that cuts off after. That would mean the AR(1). There looks to be decay in the acf of the ar 1 plot as well, so I would think that p =1, d = 0, and q = 0. For the ARMA (0,1), I would be able to tell it is MA(1) because the acf cuts off after 1. For the MA 1 model, it would be p = 0, d = 0 , and q = 1. For the ARMA 1,1, I would be able to determine that this has both components p = 1 and q = 1 (d= 0) because both the acf plot and the pacf plot have decay. They both also have a spike at 1 then it drops off.
 
 (e) Compare the PACF values R computed with the values you provided for the lag 1 correlation coefficient, i.e., does $\phi=0.6$ match what you see on PACF for ARMA(1,0), and ARMA(1,1)? Should they match?
 
-> Answer:
+> Answer: Honestly, the plots do not look to match the values that I thought I specified earlier. While I thought that they should match, maybe they do not specifically need to match as long as the lag cutoffs are correct (they cutoff after the correct lag). 
 
 (f) Increase number of observations to $n=1000$ and repeat parts (b)-(e).
 
-```{r}
-# Simulate ARMA(1,0) with phi = 0.6
+```{r 2F}
+# ARMA(1,0)  phi = 0.6
 arma_10_1000 <- arima.sim(n = 1000, list(order = c(1, 0, 0), ar = 0.6))
 
-# Simulate ARMA(0,1) with theta = 0.9
+# ARMA(0,1), theta = 0.9
 arma_01_1000 <- arima.sim(n = 1000, list(order = c(0, 0, 1), ma = 0.9))
 
-# Simulate ARMA(1,1) with phi = 0.6 and theta = 0.9
+# ARMA(1,1) phi = 0.6 and theta = 0.9
 arma_11_1000 <- arima.sim(n = 1000, list(order = c(1, 0, 1), ar = 0.6, ma = 0.9))
 
-# Generate ACF plots for each model
+# make acfs
 acf_10_1000 <- Acf(arma_10_1000, plot = FALSE, lag.max = 40)
 acf_01_1000 <- Acf(arma_01_1000, plot = FALSE, lag.max = 40)
 acf_11_1000 <- Acf(arma_11_1000, plot = FALSE, lag.max = 40)
 
-# Convert ACF data to ggplot objects using autoplot
+# plot acfs
 plot_acf_10_1000 <- autoplot(acf_10_1000, main = "ACF of ARMA(1,0)")
 plot_acf_01_1000 <- autoplot(acf_01_1000, main = "ACF of ARMA(0,1)")
 plot_acf_11_1000 <- autoplot(acf_11_1000, main = "ACF of ARMA(1,1)")
 
-# Combine the plots using cowplot::plot_grid
-plot_grid(plot_acf_10_1000, plot_acf_01_1000, plot_acf_11_1000, nrow = 1)
+# cowplot acfs
+cowplot::plot_grid(plot_acf_10_1000, plot_acf_01_1000, plot_acf_11_1000, nrow = 1)
 
-# Generate PACF plots for each model
+# make pacfs
 pacf_10_1000 <- Pacf(arma_10_1000, plot = FALSE, lag.max = 40)
 pacf_01_1000 <- Pacf(arma_01_1000, plot = FALSE, lag.max = 40)
 pacf_11_1000 <- Pacf(arma_11_1000, plot = FALSE, lag.max = 40)
 
-# Convert PACF data to ggplot objects using autoplot
+# plot pacfs
 plot_pacf_10_1000 <- autoplot(pacf_10_1000, main = "PACF of ARMA(1,0)")
 plot_pacf_01_1000 <- autoplot(pacf_01_1000, main = "PACF of ARMA(0,1)")
 plot_pacf_11_1000 <- autoplot(pacf_11_1000, main = "PACF of ARMA(1,1)")
 
-# Combine the plots using cowplot::plot_grid
-plot_grid(plot_pacf_10_1000, plot_pacf_01_1000, plot_pacf_11_1000, nrow = 1)
+# cowplot pacfs
+cowplot::plot_grid(plot_pacf_10_1000, plot_pacf_01_1000, plot_pacf_11_1000, nrow = 1)
 
 ```
+
+
+> Answer:Honestly, with more observations, it makes it easier to recognize. I would be able to determine the ARMA 1,0 from the pacf plot because there is a spike at lag 1 that cuts off after. That would mean the AR(1). There looks to be decay in the acf of the ar 1 plot as well, so I would think that p =1, d = 0, and q = 0. For the ARMA (0,1), I would be able to tell it is MA(1) because the acf cuts off after 1. It also has decay in the pacf plot. For the MA 1 model, it would be p = 0, d = 0 , and q = 1. For the ARMA 1,1, I would be able to determine that this has both components p = 1 and q = 1 (d= 0) because both the acf plot and the pacf plot have decay. They both also have a spike at 1 then it drops off. Once again, the values do not look quite right in terms of meeting the 0.6 and 0.9. I think the ARMA 1,1 model may look correct. I feel like they should match but, maybe in this case it is okay.
+
+
+
 
 ## Q3
 
@@ -166,31 +178,38 @@ Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
 Simulate a seasonal ARIMA$(0, 1)\times(1, 0)_{12}$ model with $\phi =0 .8$ and $\theta = 0.5$ using the `sim_sarima()` function from package `sarima`. The $12$ after the bracket tells you that $s=12$, i.e., the seasonal lag is 12, suggesting monthly data whose behavior is repeated every 12 months. You can generate as many observations as you like. Note the Integrated part was omitted. It means the series do not need differencing, therefore $d=D=0$. Plot the generated
 series using `autoplot()`. Does it look seasonal?
 
-```{r}
-# Simulate the seasonal ARIMA(0,1)(1,0)[12] model with specified parameters
-n <- 100  # Number of observations to generate
-phi <- 0.8  # Seasonal AR coefficient
-theta <- 0.5  # MA coefficient
+```{r 4}
+# simulate with sim_sarima
+sarima_sim <- sim_sarima(n = 1000, model = list(ar = c(rep(0, 11),0.8), ma = 0.5))
 
-# Simulate the series using sim_sarima
-simulated_series <- sim_sarima(n = n, 
-                               order = c(0, 1, 0),          # ARMA(0,1,0) 
-                               seasonal = c(1, 0, 0),       # AR(1) seasonal part
-                               s = 12,                      # Seasonal period (12 
-                               phi = phi,                   # AR coefficient
-                               theta = theta)               # MA coefficient
-
-# Plot the generated series using autoplot
-autoplot(simulated_series) + 
+ts_sarima <- ts(sarima_sim, frequency = 12)
+autoplot(ts_sarima) + 
   ggtitle("Simulated Seasonal ARIMA(0,1)(1,0)[12] Model") + 
   xlab("Time") + 
   ylab("Value")
 ```
+> Yes, there does look to be a seasonal component, as there seems to be somehwat a series of recurring spikes. I don't think it is enough of a trend to say it is explicitly an AR model, because the data looks stagnant at some points (plus I know that this has an MA component). There are some high and low points that seem to recur after certain time intervals though, so this is why I would think this has some seasonality.
+
 
 ## Q5
 
 Plot ACF and PACF of the simulated series in Q4. Comment if the plots are well representing the model you simulated, i.e., would you be able to identify the order of both non-seasonal and seasonal components from the plots? Explain.
 
-```{r}
+```{r sarima acf and pacf}
+acf_plot <- autoplot(acf(ts_sarima, plot = FALSE)) + 
+  ggtitle("ACF of Simulated Series") + 
+  xlab("Lags") + 
+  ylab("ACF")
 
+pacf_plot <- autoplot(pacf(ts_sarima, plot = FALSE)) + 
+  ggtitle("PACF of Simulated Series") + 
+  xlab("Lags") + 
+  ylab("PACF")
+
+sarima_plots <- cowplot::plot_grid(acf_plot, pacf_plot, ncol = 2)
+
+# Display the combined plots
+sarima_plots
 ```
+Comment if the plots are well representing the model you simulated, i.e., would you be able to identify the order of both non-seasonal and seasonal components from the plots? Explain.
+> I think the plots do represent the components pretty well. From the acf plot, it shows a large spike every 12 lags, which would demonstrate the seasonal ar component. Also, in the acf plot, it shows a spike at lag 1, which would be the MA(1) component. I am a little confused about the pacf plot, but I think there may be an unseeable lag that would be the 7th lag, and that would make more sense to me because there is a big spike at 1 and then another at what would be the 12th (if that invisible lag is real). I think I would be able to tell that the q = 1 because of the cut off in the acf, and I would be able to tell d = 0. Knowing this is an MA model and because I don't see decay in the pacf, I would say that the p is 0. Then I would see the 12 lag seasonal component in the ACF and be able to determine that Q = 0 and P = 1 (and D is still 0).
